@@ -90,6 +90,19 @@ When both exceed 2.0 on the same day → flag as anomaly → investigate for cat
 | `momentum_anomalies.png` | Volume + price z-scores, RSI |
 
 ---
+## Example Outputs
+
+### Normalized Performance
+![Normalized Performance](assets/normalized_prices.png)
+
+### Event Impact
+![Event Impact](assets/event_impact.png)
+
+### Anomaly Backtest
+![Anomaly Backtest](assets/anomaly_backtest.png)
+
+### Portfolio Risk
+![Portfolio Risk](assets/portfolio_risk.png)
 
 ## Quickstart
 
