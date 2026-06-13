@@ -6,6 +6,27 @@ three pure-play new space stocks with high volatility and catalyst-driven price 
 
 ---
 
+
+## Research Question
+
+Do unusual volume spikes combined with stock-specific price movement predict short-term follow-through in RKLB, ASTS, and LUNR?
+
+I built this because I personally hold new-space stocks and wanted a disciplined way to separate real catalyst-driven moves from broad market noise. These companies move on launches, NASA contracts, FCC approvals, satellite milestones, and retail momentum. The goal is not to blindly trade every alert, but to measure whether these events create abnormal returns that are actually worth paying attention to.
+
+## How I Use This
+
+I use this as a daily risk and catalyst scanner, not as an automatic trading system.
+
+When the model flags an anomaly, I check:
+
+- whether the move was stock-specific or market-wide
+- whether there was a launch, contract, FCC/NASA update, earnings event, or partnership announcement
+- whether the stock historically shows follow-through after similar moves
+- whether my current position size still makes sense given volatility, drawdown, and beta
+- whether the signal is telling me to add, trim, hedge, or simply investigate
+
+The project is personal: I am interested in the space economy and have put real money into these names, so this is my attempt to turn interest and conviction into a more disciplined research process.
+
 ## The idea
 
 New space stocks don't move like normal equities. They react to:
@@ -72,7 +93,7 @@ When both exceed 2.0 on the same day → flag as anomaly → investigate for cat
 ## Quickstart
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/new-space-radar.git
+git clone https://github.com/asoracca/new-space-radar.git
 cd new-space-radar
 pip install -r requirements.txt
 
@@ -114,7 +135,7 @@ intuition-based to data-driven position management — systematically measuring
 whether major catalysts actually create lasting abnormal returns, or just noise.
 
 Part of a broader quant portfolio project series:
-- **Project 1**: [SOXL Vol Surface](https://github.com/YOUR_USERNAME/soxl-vol-surface) — options IV rank and put-selling signal
+- **Project 1**: [SOXL Vol Surface](https://github.com/asoracca/soxl-vol-surface) — options IV rank and put-selling signal
 - **Project 2**: New Space Radar — event-driven equity analysis
 
 ---
