@@ -1,8 +1,8 @@
 # new-space-radar 🛰️
 
 A quantitative event-driven analysis toolkit for the emerging space economy.
-Tracks RKLB (Rocket Lab), ASTS (AST SpaceMobile), and LUNR (Intuitive Machines)
-— three pure-play new space stocks with high volatility and catalyst-driven price action.
+Tracks **RKLB** (Rocket Lab), **ASTS** (AST SpaceMobile), and **LUNR** (Intuitive Machines) —
+three pure-play new space stocks with high volatility and catalyst-driven price action.
 
 ---
 
@@ -15,66 +15,114 @@ New space stocks don't move like normal equities. They react to:
 - FCC licensing approvals
 - Partnership announcements
 
-This project builds a quantitative framework to detect when these events
-create **abnormal returns** — price moves that can't be explained by
-broad market movement alone.
+This project builds a quantitative framework to detect when these events create
+**abnormal returns** — price moves that can't be explained by broad market movement alone.
 
 ---
 
-## What it builds
+## Modules
 
 | Module | What it does |
 |---|---|
-| `data.py` | Pull price + volume history for RKLB, ASTS, LUNR vs SPY benchmark |
-| `events.py` | Catalog of real launch/contract/milestone events + their price impact |
-| `correlation.py` | Rolling correlation between the three stocks and vs SPY |
-| `momentum.py` | Detect abnormal volume and price momentum around events |
-| `signal.py` | Daily scan — which stock is showing unusual activity today |
+| `src/data.py` | Price + volume history for RKLB, ASTS, LUNR vs SPY. Sharpe, beta, drawdown stats. |
+| `src/charts.py` | Normalized returns, rolling beta, drawdown, return distribution plots |
+| `src/events.py` | Catalog of real launch/contract/milestone events + market-model CAR analysis |
+| `src/correlation.py` | Rolling 30-day correlations between stocks and vs SPY |
+| `src/momentum.py` | Volume + price z-scores, RSI, anomaly detection |
+| `src/signal.py` | Daily morning scan — which stock is showing unusual activity right now |
 
 ---
 
 ## Methodology
 
-Uses **event study methodology** — a standard technique in quantitative
-equity research to measure abnormal returns around known events.
+### Event study (market-model CARs)
 
-For each event:
-1. Estimate expected return using market model (beta × SPY return)
-2. Compute abnormal return = actual return − expected return
-3. Aggregate abnormal returns across events to measure average impact
-4. Test statistical significance using t-test
+For each catalogued event:
+1. Estimate alpha and beta from a 120-day pre-event estimation window using OLS
+2. Compute daily abnormal returns: `AR = r_stock − (α + β × r_SPY)`
+3. Accumulate over `[-2, +5]` trading days: `CAR = Σ AR`
+4. Compute t-statistic to assess statistical significance
+
+This isolates stock-specific reactions from broad market noise.
+
+### Anomaly detection
+
+Volume and price z-scores computed on a rolling 20-day window:
+- `Z_vol = (volume − μ_vol) / σ_vol`
+- `Z_price = (return − μ_ret) / σ_ret`
+
+When both exceed 2.0 on the same day → flag as anomaly → investigate for catalyst.
 
 ---
 
-## Personal context
+## Outputs (saved to `data/`)
 
-I hold positions in RKLB, ASTS, and LUNR. This toolkit was built to
-systematically analyze the catalysts that drive these stocks — moving
-from intuition-based to data-driven position management.
-
-Part of a broader quant portfolio project series:
-- Project 1: [SOXL Vol Surface](https://github.com/asoracca/soxl-vol-surface) — options IV analysis
-- Project 2: New Space Radar — event-driven equity analysis
+| File | Description |
+|---|---|
+| `normalized_prices.png` | Relative performance vs SPY, base = 100 |
+| `rolling_beta.png` | 60-day rolling beta for each stock |
+| `drawdown.png` | Drawdown from peak |
+| `return_distributions.png` | Daily return histogram + normal fit |
+| `event_impact.png` | CARs and t-statistics per event |
+| `correlations.png` | Rolling correlations vs SPY and inter-stock |
+| `momentum_anomalies.png` | Volume + price z-scores, RSI |
 
 ---
 
 ## Quickstart
 
 ```bash
-git clone https://github.com/asoracca/new-space-radar.git
+git clone https://github.com/YOUR_USERNAME/new-space-radar.git
 cd new-space-radar
 pip install -r requirements.txt
+
+# Full pipeline (~2 min, generates all charts)
 python main.py
+
+# Fast daily signal only
+python main.py --signal
 ```
 
 ---
 
-## Statistical disclaimer
+## Signal interpretation
 
-- Abnormal returns are estimated using a simplified market model.
-  True alpha requires controlling for additional risk factors (size, momentum, value).
-- Event catalog is manually curated — selection bias is possible.
-- Small sample sizes (few launches per ticker) limit statistical power.
-- Past event impact does not predict future event impact.
+```
+⚠️  ANOMALY     vol_z > ±2  AND  price_z > ±2  →  investigate catalyst
+🔴  Overbought  RSI > 70                         →  momentum may reverse
+🟢  Oversold    RSI < 30                         →  potential entry
+👀  Watch       |price_z| > 1.5                  →  elevated move, monitor
+```
+
+Low SPY correlation (< 0.3) alongside an anomaly = high probability of stock-specific catalyst.
+
+---
+
+## Statistical caveats
+
+- Event catalog is manually curated — selection bias is possible
+- Small sample sizes (5–7 events per ticker) limit statistical power
+- Market model uses realized vol as a proxy; true IV requires options history
+- Past event impact does not predict future event impact
+
+---
+
+## Personal context
+
+I hold positions in RKLB, ASTS, and LUNR. This toolkit was built to move from
+intuition-based to data-driven position management — systematically measuring
+whether major catalysts actually create lasting abnormal returns, or just noise.
+
+Part of a broader quant portfolio project series:
+- **Project 1**: [SOXL Vol Surface](https://github.com/YOUR_USERNAME/soxl-vol-surface) — options IV rank and put-selling signal
+- **Project 2**: New Space Radar — event-driven equity analysis
+
+---
+
+## Tech stack
+
+`yfinance` · `pandas` · `numpy` · `scipy` · `matplotlib`
+
+---
 
 *Built as a quant portfolio project. Not financial advice.*
