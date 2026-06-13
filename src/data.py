@@ -1,4 +1,3 @@
-cat > /home/claude/new-space-radar/src/data.py << 'EOF'
 """
 data.py
 -------
@@ -226,5 +225,3 @@ if __name__ == "__main__":
     volume  = fetch_volume_history()
     returns = compute_returns(prices)
     print_summary(prices, returns)
-EOF
-echo "Done"
