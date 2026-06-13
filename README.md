@@ -51,7 +51,8 @@ This project builds a quantitative framework to detect when these events create
 | `src/correlation.py` | Rolling 30-day correlations between stocks and vs SPY |
 | `src/momentum.py` | Volume + price z-scores, RSI, anomaly detection |
 | `src/signal.py` | Daily morning scan — which stock is showing unusual activity right now |
-
+| `src/backtest.py` | Tests whether anomaly signals lead to 5-day follow-through |
+| `src/portfolio.py` | Measures portfolio beta, drawdown, and risk contribution |
 ---
 
 ## Methodology
