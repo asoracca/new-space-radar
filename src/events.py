@@ -283,3 +283,13 @@ if __name__ == "__main__":
     events  = analyze_all_events(prices, returns)
     print_event_summary(events)
     plot_event_impact(events)
+    from scipy import stats
+
+def test_significance(event_df, ticker):
+    df = event_df[event_df['ticker'] == ticker]['abnormal_ret']
+    t_stat, p_value = stats.ttest_1samp(df.dropna(), 0)
+    print(f"{ticker}: t={t_stat:.2f}, p={p_value:.3f}")
+    if p_value < 0.05:
+        print(f"  Statistically significant at 95% confidence")
+    else:
+        print(f"  Not statistically significant (small sample)")
