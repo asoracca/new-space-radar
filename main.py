@@ -27,7 +27,7 @@ from src.momentum import (compute_volume_zscore, compute_price_zscore,
                            print_momentum_summary, plot_momentum)
 from src.charts import (plot_normalized_prices, plot_rolling_beta,
                         plot_drawdown, plot_return_distribution)
-from src.signal import run_signal
+from src.trade_signal import run_signal
 
 
 def main(signal_only: bool = False):
