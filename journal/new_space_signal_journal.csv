@@ -25,3 +25,25 @@ diversifying across all 3 doesn't actually reduce risk much.
 
 ## Tomorrow's Plan
 Run python main.py again. Watch if RSI stays oversold or starts recovering.
+## 2026-07-01 Run — Fixed src.trade_signal import bug
+
+## Event Analysis Summary
+RKLB: avg CAR +10.4% across 7 events, only 1/7 statistically significant (t>1.96).
+ASTS: avg CAR -8.0% across 6 events, 0/6 significant.
+LUNR: avg CAR -12.4% across 5 events, 1/5 significant — IM-2 lunar landing attempt (Mar 2026) was the one sig event, CAR -61.6%, t=-3.04.
+Event-window drift: ASTS and LUNR show significant post-event REVERSAL by day+10 (ASTS -24.8% further, LUNR -39.8% further) — RKLB shows no clear drift.
+
+## Portfolio Snapshot
+RKLB $100.07 | 1Y +179.8%, Sharpe 1.65, maxDD -48.1% | 1M -18.2%
+ASTS $86.10  | 1Y +84.2%,  Sharpe 0.92, maxDD -54.1% | 1M -18.5%
+LUNR $20.20  | 1Y +85.8%,  Sharpe 0.69, maxDD -71.9% | 1M -47.1%
+SPY: 1Y +22.0%, Sharpe 0.69 for comparison — all three still 1Y-beat SPY on raw Sharpe, but 1M shows the whole space-stock cluster getting hit far harder than the broad market (-18% to -47% vs SPY -1.4%).
+
+## Notes
+Inter-stock correlation still high (0.68-0.78) — confirms the "one bet, not three" read. Vs-SPY correlation moderate (0.36-0.49), unchanged from before.
+No anomalies flagged today — all three z-scores near neutral, RSI in the 34-49 range (LUNR closest to oversold at 34.3, not yet below 30).
+Most CARs are NOT statistically significant given 5-7 events per ticker — matches the documented sample-size caveat, resisting the urge to read too much into any single event's average.
+
+## Tomorrow's Plan
+Watch LUNR RSI for a cross below 30 (oversold) given its brutal -47.1% 1M return.
+Keep logging daily — need to get past ~20 entries before descriptive-tier patterns are worth writing up publicly.
