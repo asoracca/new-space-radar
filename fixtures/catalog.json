@@ -1,0 +1,362 @@
+[
+  {
+    "id": "rklb-001",
+    "symbol": "RKLB",
+    "title": "Electron launch — NROL-162",
+    "original_date": "2023-03-24",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2023-03-24",
+      "event": "Electron launch — NROL-162",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "rklb-002",
+    "symbol": "RKLB",
+    "title": "Electron launch — TROPICS-2",
+    "original_date": "2023-07-17",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2023-07-17",
+      "event": "Electron launch — TROPICS-2",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "rklb-003",
+    "symbol": "RKLB",
+    "title": "NASA ESCAPADE contract award",
+    "original_date": "2023-09-19",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "contract",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2023-09-19",
+      "event": "NASA ESCAPADE contract award",
+      "type": "contract"
+    }
+  },
+  {
+    "id": "rklb-004",
+    "symbol": "RKLB",
+    "title": "Electron launch — NROL-123",
+    "original_date": "2024-02-18",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-02-18",
+      "event": "Electron launch — NROL-123",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "rklb-005",
+    "symbol": "RKLB",
+    "title": "Neutron rocket development update",
+    "original_date": "2024-07-24",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "milestone",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-07-24",
+      "event": "Neutron rocket development update",
+      "type": "milestone"
+    }
+  },
+  {
+    "id": "rklb-006",
+    "symbol": "RKLB",
+    "title": "Electron launch — Kinéis 5",
+    "original_date": "2024-11-05",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-11-05",
+      "event": "Electron launch — Kinéis 5",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "rklb-007",
+    "symbol": "RKLB",
+    "title": "Neutron upper stage contract",
+    "original_date": "2025-03-14",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "contract",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2025-03-14",
+      "event": "Neutron upper stage contract",
+      "type": "contract"
+    }
+  },
+  {
+    "id": "asts-001",
+    "symbol": "ASTS",
+    "title": "BlueWalker 3 first call completed",
+    "original_date": "2023-04-01",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "milestone",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2023-04-01",
+      "event": "BlueWalker 3 first call completed",
+      "type": "milestone"
+    }
+  },
+  {
+    "id": "asts-002",
+    "symbol": "ASTS",
+    "title": "AT&T partnership expansion",
+    "original_date": "2023-09-10",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "contract",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2023-09-10",
+      "event": "AT&T partnership expansion",
+      "type": "contract"
+    }
+  },
+  {
+    "id": "asts-003",
+    "symbol": "ASTS",
+    "title": "BlueBird satellite manufacturing begins",
+    "original_date": "2024-04-04",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "milestone",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-04-04",
+      "event": "BlueBird satellite manufacturing begins",
+      "type": "milestone"
+    }
+  },
+  {
+    "id": "asts-004",
+    "symbol": "ASTS",
+    "title": "BlueBird 1-5 launch success",
+    "original_date": "2024-09-12",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-09-12",
+      "event": "BlueBird 1-5 launch success",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "asts-005",
+    "symbol": "ASTS",
+    "title": "First commercial satellite call",
+    "original_date": "2024-11-01",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "milestone",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-11-01",
+      "event": "First commercial satellite call",
+      "type": "milestone"
+    }
+  },
+  {
+    "id": "asts-006",
+    "symbol": "ASTS",
+    "title": "DoD contract for satellite comms",
+    "original_date": "2025-01-15",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "contract",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2025-01-15",
+      "event": "DoD contract for satellite comms",
+      "type": "contract"
+    }
+  },
+  {
+    "id": "lunr-001",
+    "symbol": "LUNR",
+    "title": "IM-1 Odysseus moon landing",
+    "original_date": "2024-02-22",
+    "timestamp": "2024-02-22T18:23:00-05:00",
+    "timezone": "America/New_York",
+    "source_url": "https://www.nasa.gov/news-release/nasa-intuitive-machines-to-discuss-historic-moon-mission-today/",
+    "event_type": "launch",
+    "announcement_status": "confirmed",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "occurrence",
+    "source_note": "NASA retrospective report, published 2024-02-23; occurrence at 18:23 EST on Feb 22. First public confirmation timestamp unknown. Descriptive alignment only, not an executable announcement signal.",
+    "original_record": {
+      "date": "2024-02-22",
+      "event": "IM-1 Odysseus moon landing",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "lunr-002",
+    "symbol": "LUNR",
+    "title": "NASA contract follow-on announced",
+    "original_date": "2024-03-01",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "contract",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-03-01",
+      "event": "NASA contract follow-on announced",
+      "type": "contract"
+    }
+  },
+  {
+    "id": "lunr-003",
+    "symbol": "LUNR",
+    "title": "IM-2 mission preparation update",
+    "original_date": "2024-11-20",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "milestone",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2024-11-20",
+      "event": "IM-2 mission preparation update",
+      "type": "milestone"
+    }
+  },
+  {
+    "id": "lunr-004",
+    "symbol": "LUNR",
+    "title": "IM-2 launch to lunar south pole",
+    "original_date": "2025-02-26",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2025-02-26",
+      "event": "IM-2 launch to lunar south pole",
+      "type": "launch"
+    }
+  },
+  {
+    "id": "lunr-005",
+    "symbol": "LUNR",
+    "title": "IM-2 lunar landing attempt",
+    "original_date": "2025-03-06",
+    "timestamp": null,
+    "timezone": "America/New_York",
+    "source_url": null,
+    "event_type": "launch",
+    "announcement_status": "unverified",
+    "alignment": "first_session_closing_after_timestamp",
+    "input_kind": "historical",
+    "timestamp_basis": "unknown",
+    "source_note": "Original date-only curated catalog; no primary source or time supplied.",
+    "original_record": {
+      "date": "2025-03-06",
+      "event": "IM-2 lunar landing attempt",
+      "type": "launch"
+    }
+  }
+]

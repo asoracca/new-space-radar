@@ -36,7 +36,6 @@ warnings.filterwarnings('ignore')
 
 import pandas as pd
 import numpy as np
-import yfinance as yf
 from pathlib import Path
 
 TICKERS       = ['RKLB', 'ASTS', 'LUNR', 'SPY']
@@ -44,6 +43,7 @@ SPACE_TICKERS = ['RKLB', 'ASTS', 'LUNR']
 
 
 def fetch_price_history(period="2y"):
+    import yfinance as yf
     print(f"Fetching price history for {TICKERS}...")
     raw    = yf.download(TICKERS, period=period, interval="1d", progress=False)
     prices = raw['Close'].copy()
@@ -57,6 +57,7 @@ def fetch_price_history(period="2y"):
 
 
 def fetch_volume_history(period="2y"):
+    import yfinance as yf
     raw = yf.download(TICKERS, period=period, interval="1d", progress=False)
     vol = raw['Volume'].copy()
     if isinstance(vol.columns, pd.MultiIndex):
@@ -73,7 +74,7 @@ def compute_returns(prices: pd.DataFrame) -> pd.DataFrame:
     2. They're more normally distributed (easier to model statistically)
     3. Standard in quantitative finance
     """
-    return np.log(prices / prices.shift(1)).dropna()
+    return np.log(prices / prices.shift(1))
 
 
 def compute_excess_returns(returns: pd.DataFrame) -> pd.DataFrame:
