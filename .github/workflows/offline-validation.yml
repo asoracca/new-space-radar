@@ -1,0 +1,29 @@
+name: Offline evidence validation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Bootstrap downloads dependencies only; validation has no network namespace.
+      - name: Install pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-offline.lock
+          npm install --global pnpm@10.11.0
+          pnpm --dir explorer install --frozen-lockfile
+      - name: Run Python tests and demo with network disabled
+        run: sudo unshare --net -- .venv/bin/python scripts/check_offline.py
+      - name: Compile and test TypeScript with network disabled
+        run: |
+          sudo unshare --net -- "$(command -v node)" explorer/node_modules/typescript/bin/tsc -p explorer/tsconfig.json
+          sudo unshare --net -- "$(command -v node)" --test explorer/tests.mjs
+          git diff --exit-code -- explorer/dist

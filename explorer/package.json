@@ -1,0 +1,8 @@
+{
+  "name": "space-event-evidence-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "tsc", "test": "node --test tests.mjs"},
+  "devDependencies": {"typescript": "5.8.3"}
+}

@@ -24,3 +24,12 @@ def test_migrations_reproducibility_and_reconciliation(tmp_path):
     with pytest.raises(sqlite3.IntegrityError):
         db.execute('INSERT INTO events SELECT ?,symbol,event_type,timestamp,original_date,input_kind,announcement_status,source_url,payload FROM events LIMIT 1',('duplicate',))
     db.rollback()
+
+
+def test_canonical_timestamp_uniqueness(tmp_path):
+    s,r,e=synthetic_case()
+    equivalent=replace(e[0],id='same-instant',timestamp='2024-02-22T23:23:00+00:00',timezone='UTC')
+    db=connect(tmp_path/'canonical.db')
+    with pytest.raises(sqlite3.IntegrityError):
+        save_run(db,[e[0],equivalent],study([e[0],equivalent],r,s),{'fixture':'duplicate'})
+    assert db.execute('SELECT COUNT(*) FROM runs').fetchone()[0]==0

@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Source-aware space event research with session alignment and reproducible validation."><title>Space event evidence</title><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="eyebrow">NEW SPACE RADAR / RESEARCH</div><h1>Event evidence</h1><p>Inspect the source, session alignment and limits behind each result.</p><small id="run">Loading saved evidence…</small></header>
+<main><section class="filters" aria-label="Filter events">
+<label>Input<select id="kind"><option value="historical">Saved historical catalog</option><option value="synthetic">Synthetic validation</option></select></label>
+<label>Symbol<select id="symbol"><option value="">All</option></select></label><label>Event type<select id="type"><option value="">All</option></select></label>
+<label>Result<select id="status"><option value="">All</option><option value="included">Included</option><option value="excluded">Excluded</option></select></label>
+<label>From<input type="date" id="start"></label><label>Through<input type="date" id="end"></label>
+</section><p id="counts" role="status">Loading events…</p><p class="notice">Historical catalog entries retain their original descriptions. Missing sources, times or prices prevent estimation. Synthetic results test the method; they do not measure trading performance.</p>
+<div class="workspace"><section class="list" aria-label="Matching events"><table><thead><tr><th scope="col">Event</th><th scope="col">Session / original date</th><th scope="col">Result</th><th scope="col">CAR</th></tr></thead><tbody id="rows"></tbody></table><p id="empty"></p></section>
+<section id="detail" hidden><div id="badge" class="eyebrow"></div><h2 id="title"></h2><p id="alignment" class="alignment"></p><p id="timing"></p><p id="result" class="result"></p><p id="sample"></p><div id="curve" class="curve"></div><p id="curve-note"></p><h3>Source & timing</h3><a id="source" target="_blank" rel="noopener noreferrer"></a><p id="source-note"></p><h3>Limits of this result</h3><p id="limitations"></p></section></div>
+<footer><a href="../evidence/RESULTS.md">Recorded validation</a> · <a href="../evidence/results.json">Full evidence export</a></footer></main><script type="module" src="dist/app.js"></script></body></html>

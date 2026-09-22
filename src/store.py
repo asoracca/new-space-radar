@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import pandas as pd
 from src.events import ROOT
 
 
@@ -55,7 +56,7 @@ def save_run(db,events,results,manifest):
                 if e.source_url:
                     db.execute('INSERT OR IGNORE INTO sources VALUES (?,?)',(e.source_url,e.source_note))
                 db.execute('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?)',
-                           (e.id,e.symbol,e.event_type,e.timestamp,e.original_date,e.input_kind,
+                           (e.id,e.symbol,e.event_type,pd.Timestamp(e.timestamp).tz_convert("UTC").isoformat() if e.timestamp else None,e.original_date,e.input_kind,
                             e.announcement_status,e.source_url,payload))
         for r in results:
             db.execute('INSERT INTO results VALUES (?,?,?,?,?,?,?)',

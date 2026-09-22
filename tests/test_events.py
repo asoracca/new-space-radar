@@ -93,3 +93,40 @@ def test_model_interval_formula(case):
     assert out['car_se']>0
     for p in out['path']:
         assert p['lower']<p['car']<p['upper']
+
+@pytest.mark.parametrize('timestamp,reason',[
+    ('2021-12-30T10:00:00-05:00','calendar_out_of_range'),
+    ('2026-01-05T10:00:00-05:00','calendar_out_of_range'),
+    ('2025-12-31T10:00:00-05:00','incomplete_event_window')])
+def test_boundaries(case,timestamp,reason):
+    s,r,ev=case
+    assert study([replace(ev[0],timestamp=timestamp)],r,s)[0]['reason']==reason
+
+
+def test_singular_model_and_invalid_windows(case):
+    s,r,ev=case; r['SPY']=0
+    assert study(ev,r,s)[0]['reason']=='singular_market_model'
+    with pytest.raises(ValueError): StudyConfig(gap=-1)
+    with pytest.raises(ValueError): StudyConfig(estimation=2)
+
+
+def test_uncertainty_matches_independent_prediction_variance(case):
+    s,r,ev=case
+    r['SHOCK']+=np.random.default_rng(90).normal(0,.01,len(r))
+    row=study(ev,r,s)[0]
+    est=r.loc[row['estimation_start']:row['estimation_end']]
+    win=r.loc[row['event_start']:row['event_end']]
+    residual=est.SHOCK-row['alpha']-row['beta']*est.SPY
+    n,m=len(est),len(win)
+    # Equivalent closed form for intercept + one regressor.
+    variance=residual.dot(residual)/(n-2)
+    se=np.sqrt(variance*(m+m*m/n+(win.SPY.sum()-m*est.SPY.mean())**2/((est.SPY-est.SPY.mean())**2).sum()))
+    assert row['car_se']==pytest.approx(se)
+
+
+def test_original_catalog_is_preserved():
+    import json
+    from src.events import ROOT
+    original=json.loads((ROOT/'fixtures/original_catalog.json').read_text())
+    reconstructed={symbol:[e.original_record for e in load_catalog() if e.symbol==symbol] for symbol in original}
+    assert reconstructed==original
