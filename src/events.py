@@ -1,295 +1,225 @@
-"""
-events.py
----------
-Catalog of real RKLB, ASTS, LUNR events with price impact analysis.
-
-Methodology: event study with market-model abnormal returns.
-  Expected return = alpha + beta * SPY_return  (estimated on pre-event window)
-  Abnormal return = actual return - expected return
-  CAR = cumulative abnormal return over event window
-"""
-
-import warnings
-warnings.filterwarnings('ignore')
-
-import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from scipy import stats
+"""Provenance-aware, calendar-aligned descriptive market-model event studies."""
+from dataclasses import asdict, dataclass
 from pathlib import Path
+import json
+from zoneinfo import ZoneInfo
+import numpy as np
+import pandas as pd
+from scipy.stats import t
 
-EVENTS = {
-    'RKLB': [
-        {'date': '2023-03-24', 'event': 'Electron launch — NROL-162',         'type': 'launch'},
-        {'date': '2023-07-17', 'event': 'Electron launch — TROPICS-2',         'type': 'launch'},
-        {'date': '2023-09-19', 'event': 'NASA ESCAPADE contract award',         'type': 'contract'},
-        {'date': '2024-02-18', 'event': 'Electron launch — NROL-123',           'type': 'launch'},
-        {'date': '2024-07-24', 'event': 'Neutron rocket development update',    'type': 'milestone'},
-        {'date': '2024-11-05', 'event': 'Electron launch — Kinéis 5',          'type': 'launch'},
-        {'date': '2025-03-14', 'event': 'Neutron upper stage contract',         'type': 'contract'},
-    ],
-    'ASTS': [
-        {'date': '2023-04-01', 'event': 'BlueWalker 3 first call completed',   'type': 'milestone'},
-        {'date': '2023-09-10', 'event': 'AT&T partnership expansion',           'type': 'contract'},
-        {'date': '2024-04-04', 'event': 'BlueBird satellite manufacturing begins','type': 'milestone'},
-        {'date': '2024-09-12', 'event': 'BlueBird 1-5 launch success',         'type': 'launch'},
-        {'date': '2024-11-01', 'event': 'First commercial satellite call',      'type': 'milestone'},
-        {'date': '2025-01-15', 'event': 'DoD contract for satellite comms',     'type': 'contract'},
-    ],
-    'LUNR': [
-        {'date': '2024-02-22', 'event': 'IM-1 Odysseus moon landing',          'type': 'launch'},
-        {'date': '2024-03-01', 'event': 'NASA contract follow-on announced',    'type': 'contract'},
-        {'date': '2024-11-20', 'event': 'IM-2 mission preparation update',      'type': 'milestone'},
-        {'date': '2025-02-26', 'event': 'IM-2 launch to lunar south pole',     'type': 'launch'},
-        {'date': '2025-03-06', 'event': 'IM-2 lunar landing attempt',          'type': 'launch'},
-    ]
-}
+ROOT = Path(__file__).resolve().parents[1]
+POLICY = 'first_session_closing_after_timestamp'
+LIMITATIONS = ('Exploratory descriptive study, not a trading-edge or catalyst-probability claim. '
+               'Curated selection, cross-stock dependence and multiple comparisons preclude '
+               'confirmatory inference. Intervals assume IID constant-variance model errors; '
+               'they are pointwise model diagnostics, not simultaneous confidence bands.')
+EVENT_COLORS = {'launch': '#1D9E75', 'contract': '#378ADD', 'milestone': '#7F77DD'}
 
-EVENT_COLORS = {
-    'launch':    '#1D9E75',
-    'contract':  '#378ADD',
-    'milestone': '#7F77DD',
-}
+@dataclass(frozen=True)
+class Event:
+    id: str
+    symbol: str
+    title: str
+    original_date: str
+    timestamp: str | None
+    timezone: str
+    source_url: str | None
+    event_type: str
+    announcement_status: str
+    alignment: str = POLICY
+    input_kind: str = 'historical'
+    timestamp_basis: str = 'announcement'
+    source_note: str = ''
+    original_record: dict | None = None
+
+    def __post_init__(self):
+        if not self.id or not self.symbol or not self.event_type:
+            raise ValueError('ID, symbol and event type are required')
+        if self.alignment != POLICY or self.input_kind not in {'historical', 'synthetic', 'live'}:
+            raise ValueError('Unsupported alignment or input kind')
+        if self.announcement_status not in {'confirmed', 'scheduled', 'unverified', 'duplicate'}:
+            raise ValueError('Invalid announcement status')
+        if self.timestamp_basis not in {'announcement', 'occurrence', 'unknown'}:
+            raise ValueError('Invalid timestamp basis')
+        zone = ZoneInfo(self.timezone)
+        if self.timestamp is not None:
+            ts = pd.Timestamp(self.timestamp)
+            if ts.tzinfo is None or pd.isna(ts):
+                raise ValueError('Timestamp must have a UTC offset')
+            if ts.utcoffset() != ts.tz_convert(zone).utcoffset():
+                raise ValueError('Timestamp offset disagrees with timezone')
+        if self.source_url and not self.source_url.startswith(('https://', 'http://')):
+            raise ValueError('Source URL must be HTTP(S)')
 
 
-def _estimate_market_model(ticker: str,
-                            ev_idx: int,
-                            returns: pd.DataFrame,
-                            estimation_window: int = 120) -> tuple[float, float]:
+def load_catalog(path=ROOT / 'fixtures/catalog.json'):
+    return [Event(**row) for row in json.loads(Path(path).read_text())]
+
+# Compatibility for existing pipeline callers; one canonical catalog.
+EVENTS = {s: [asdict(e) for e in load_catalog() if e.symbol == s] for s in ['RKLB','ASTS','LUNR']}
+
+
+def load_schedule(path=ROOT / 'fixtures/xnys_sessions.csv'):
+    frame = pd.read_csv(path, index_col='session', parse_dates=['session'])
+    for col in ['open', 'close']:
+        frame[col] = pd.to_datetime(frame[col], utc=True)
+    return frame
+
+
+def align_event(event, schedule):
+    if event.timestamp is None:
+        raise ValueError('unknown_timestamp')
+    ts = pd.Timestamp(event.timestamp).tz_convert('UTC')
+    # Do not extrapolate outside the frozen schedule, including its first midnight.
+    if ts < schedule.index[0].tz_localize(event.timezone).tz_convert('UTC'):
+        raise ValueError('calendar_out_of_range')
+    candidates = schedule.index[schedule['close'] > ts]
+    if len(candidates) == 0:
+        raise ValueError('calendar_out_of_range')
+    return candidates[0]
+
+
+@dataclass(frozen=True)
+class StudyConfig:
+    estimation: int = 120
+    gap: int = 5
+    pre: int = 2
+    post: int = 5
+
+    def __post_init__(self):
+        if self.estimation < 3 or min(self.gap, self.pre, self.post) < 0:
+            raise ValueError('Invalid study windows')
+
+
+def study(events, returns, schedule, config=StudyConfig()):
+    """Fixed complete windows. Missing rows remain missing; never skip to a later price.
+
+    Input returns are close-to-close log returns indexed by naive session date.
+    Both overlapping same-stock event windows and other known events in the
+    estimation window are conservatively excluded. Duplicate canonical keys keep
+    the first catalog entry; every submission gets an outcome.
     """
-    OLS regression of stock returns on SPY returns using pre-event window.
-    Returns (alpha, beta).
-    """
-    start = max(0, ev_idx - estimation_window - 10)
-    end   = max(0, ev_idx - 10)           # 10-day buffer before event
-
-    if end <= start + 20:                  # need at least 20 obs
-        return 0.0, 1.0
-
-    y = returns[ticker].iloc[start:end].values
-    x = returns['SPY'].iloc[start:end].values
-
-    mask = ~(np.isnan(x) | np.isnan(y))
-    if mask.sum() < 20:
-        return 0.0, 1.0
-
-    slope, intercept, *_ = stats.linregress(x[mask], y[mask])
-    return intercept, slope
-
-
-def compute_event_impact(ticker: str,
-                          events: list,
-                          prices: pd.DataFrame,
-                          returns: pd.DataFrame,
-                          pre_window: int = 2,
-                          post_window: int = 5) -> pd.DataFrame:
-    """
-    For each event compute:
-      - Event-day return and abnormal return
-      - CAR[-pre, +post] using market-model residuals
-      - t-statistic for abnormal return
-    """
-    results = []
-
-    for ev in events:
-        ev_date    = pd.Timestamp(ev['date'])
-        available  = prices.index[prices.index >= ev_date]
-        if len(available) == 0:
+    if not returns.index.is_unique or not returns.index.is_monotonic_increasing:
+        raise ValueError('Return index must be unique and sorted')
+    if not isinstance(returns.index, pd.DatetimeIndex) or returns.index.tz is not None:
+        raise ValueError('Returns require naive session-date DatetimeIndex')
+    if not returns.index.equals(returns.index.normalize()):
+        raise ValueError('Returns require midnight session labels')
+    if len({e.id for e in events}) != len(events):
+        raise ValueError('Duplicate stable event ID')
+    aligned, reasons, seen = {}, {}, set()
+    for e in events:
+        if e.announcement_status != 'confirmed':
+            reasons[e.id] = 'announcement_' + e.announcement_status
             continue
-        actual_date = available[0]
-        idx = prices.index.get_loc(actual_date)
-
-        # Market model params from pre-event window
-        alpha, beta = _estimate_market_model(ticker, idx, returns)
-
-        # Collect abnormal returns over window
-        ar_list = []
-        window_indices = range(max(0, idx - pre_window),
-                               min(len(returns) - 1, idx + post_window + 1))
-
-        for wi in window_indices:
-            r_stock = returns[ticker].iloc[wi]
-            r_spy   = returns['SPY'].iloc[wi]
-            if np.isnan(r_stock) or np.isnan(r_spy):
-                continue
-            ar = r_stock - (alpha + beta * r_spy)
-            ar_list.append(ar)
-
-        if not ar_list:
+        if not e.source_url:
+            reasons[e.id] = 'missing_source'
             continue
-
-        car = sum(ar_list)
-
-        # Event-day abnormal return
-        if idx < len(returns):
-            r_ev     = returns[ticker].iloc[idx]
-            r_spy_ev = returns['SPY'].iloc[idx]
-            ar_day   = r_ev - (alpha + beta * r_spy_ev)
+        try:
+            session = align_event(e, schedule)
+        except ValueError as ex:
+            reasons[e.id] = str(ex)
+            continue
+        key = (e.symbol, pd.Timestamp(e.timestamp).tz_convert('UTC').isoformat(), e.event_type)
+        if key in seen:
+            reasons[e.id] = 'duplicate_announcement'
         else:
-            ar_day = np.nan
-
-        # Compute t-stat (against null hypothesis CAR = 0)
-        # Use estimation-window residual std as benchmark
-        est_start = max(0, idx - 130)
-        est_end   = max(0, idx - 10)
-        est_ars   = []
-        for wi in range(est_start, est_end):
-            if wi >= len(returns):
-                break
-            r_s = returns[ticker].iloc[wi]
-            r_m = returns['SPY'].iloc[wi]
-            if not (np.isnan(r_s) or np.isnan(r_m)):
-                est_ars.append(r_s - (alpha + beta * r_m))
-
-        sigma = np.std(est_ars) * np.sqrt(len(ar_list)) if len(est_ars) > 5 else np.nan
-        t_stat = car / sigma if sigma and sigma > 0 else np.nan
-
-        results.append({
-            'ticker':      ticker,
-            'event_date':  ev_date.date(),
-            'event':       ev['event'],
-            'type':        ev['type'],
-            'alpha':       round(alpha, 5),
-            'beta':        round(beta, 3),
-            'ar_day':      round(ar_day, 4) if not np.isnan(ar_day) else np.nan,
-            'CAR':         round(car, 4),
-            't_stat':      round(t_stat, 2) if not np.isnan(t_stat) else np.nan,
-            'significant': abs(t_stat) > 1.96 if not np.isnan(t_stat) else False,
-        })
-
-    return pd.DataFrame(results)
-
-
-def analyze_all_events(prices: pd.DataFrame,
-                        returns: pd.DataFrame) -> pd.DataFrame:
-    all_results = []
-    for ticker, events in EVENTS.items():
-        if ticker not in prices.columns:
+            seen.add(key)
+            aligned[e.id] = schedule.index.get_loc(session)
+    rows = []
+    for e in events:
+        row = {**asdict(e), 'aligned_session': None, 'reason': reasons.get(e.id),
+               'n_estimation': 0, 'n_event': 0, 'path': [], 'car': None,
+               'limitations': LIMITATIONS}
+        if e.id not in aligned:
+            rows.append(row)
             continue
-        df = compute_event_impact(ticker, events, prices, returns)
-        all_results.append(df)
+        i = aligned[e.id]
+        a, b = i-config.pre, i+config.post+1
+        end = a-config.gap
+        start = end-config.estimation
+        row['aligned_session'] = str(schedule.index[i].date())
+        others = [j for key,j in aligned.items() if key != e.id and
+                  next(x.symbol for x in events if x.id == key) == e.symbol]
+        if any(a <= j+config.post and j-config.pre < b for j in others):
+            row['reason'] = 'overlapping_event_window'
+        elif any(start <= j+config.post and j-config.pre < end for j in others):
+            row['reason'] = 'contaminated_estimation_window'
+        elif start < 0:
+            row['reason'] = 'insufficient_history'
+        elif b > len(schedule):
+            row['reason'] = 'incomplete_event_window'
+        elif e.symbol not in returns or 'SPY' not in returns:
+            row['reason'] = 'missing_stock_or_benchmark'
+        else:
+            est_dates, event_dates = schedule.index[start:end], schedule.index[a:b]
+            assert not len(est_dates.intersection(event_dates))
+            est = returns.reindex(est_dates)[['SPY', e.symbol]]
+            win = returns.reindex(event_dates)[['SPY', e.symbol]]
+            row.update(estimation_start=str(est_dates[0].date()), estimation_end=str(est_dates[-1].date()),
+                       event_start=str(event_dates[0].date()), event_end=str(event_dates[-1].date()),
+                       n_estimation=int(np.isfinite(est).all(axis=1).sum()),
+                       n_event=int(np.isfinite(win).all(axis=1).sum()))
+            if not np.isfinite(est.to_numpy()).all():
+                row['reason'] = 'missing_estimation_observation'
+            elif not np.isfinite(win.to_numpy()).all():
+                row['reason'] = 'missing_event_observation'
+            else:
+                x = np.column_stack([np.ones(len(est)), est['SPY']])
+                y = est[e.symbol].to_numpy()
+                coef, _, rank, _ = np.linalg.lstsq(x, y, rcond=None)
+                if rank != 2:
+                    row['reason'] = 'singular_market_model'
+                else:
+                    z = np.column_stack([np.ones(len(win)), win['SPY']])
+                    ar = win[e.symbol].to_numpy() - z @ coef
+                    residual = y - x @ coef
+                    variance = float(residual @ residual / (len(est)-2))
+                    inv = np.linalg.inv(x.T @ x)
+                    path = []
+                    for k, car in enumerate(np.cumsum(ar)):
+                        v = z[:k+1].sum(axis=0)
+                        se = float(np.sqrt(max(0, variance*((k+1) + v @ inv @ v))))
+                        half = float(t.ppf(.975, len(est)-2) * se)
+                        path.append(dict(offset=k-config.pre, session=str(event_dates[k].date()),
+                                         ar=float(ar[k]), car=float(car), se=se,
+                                         lower=float(car-half), upper=float(car+half)))
+                    row.update(alpha=float(coef[0]), beta=float(coef[1]), path=path,
+                               car=path[-1]['car'], ar_day=float(ar[config.pre]),
+                               null_car=0.0, car_se=path[-1]['se'])
+        row['status'] = 'included' if row['reason'] is None else 'excluded'
+        rows.append(row)
+    for r in rows:
+        r['status'] = 'included' if r['reason'] is None else 'excluded'
+    return rows
 
-    if not all_results:
-        return pd.DataFrame()
-    return pd.concat(all_results, ignore_index=True)
+
+def compute_event_impact(ticker, events, prices, returns, pre_window=2, post_window=5):
+    objects = [e if isinstance(e, Event) else Event(**e) for e in events]
+    rows = study(objects, returns, load_schedule(), StudyConfig(pre=pre_window, post=post_window))
+    return pd.DataFrame(rows)
 
 
-def print_event_summary(event_df: pd.DataFrame):
-    if event_df.empty:
-        print("No events analyzed.")
+def analyze_all_events(prices, returns):
+    return pd.DataFrame(study(load_catalog(), returns, load_schedule()))
+
+
+def print_event_summary(event_df):
+    if not event_df.empty:
+        print(event_df[['id','symbol','aligned_session','status','reason','car']].to_string(index=False))
+    print(LIMITATIONS)
+
+
+def plot_event_impact(event_df, save=True):
+    import matplotlib.pyplot as plt
+    valid = event_df[event_df['status'] == 'included'] if not event_df.empty else event_df
+    if valid.empty:
         return
-
-    print("\n" + "="*65)
-    print("  EVENT IMPACT ANALYSIS (Market-Model Abnormal Returns)")
-    print("="*65)
-
-    for ticker in ['RKLB', 'ASTS', 'LUNR']:
-        df = event_df[event_df['ticker'] == ticker]
-        if df.empty:
-            continue
-
-        sig = df[df['significant']]
-        print(f"\n  {ticker}  (β̄ = {df['beta'].mean():.2f})")
-        print(f"    Events analyzed:        {len(df)}")
-        print(f"    Avg CAR [-2,+5]:        {df['CAR'].mean():.1%}")
-        print(f"    Avg event-day AR:       {df['ar_day'].mean():.1%}")
-        print(f"    Statistically sig (|t|>1.96): {len(sig)}/{len(df)}")
-
-        for etype in ['launch', 'contract', 'milestone']:
-            sub = df[df['type'] == etype]
-            if not sub.empty:
-                print(f"    {etype.capitalize()} avg CAR: {sub['CAR'].mean():.1%} "
-                      f"(n={len(sub)})")
-
-    print(f"\n{'─'*65}")
-    print("  All events:")
-    cols = ['ticker', 'event_date', 'type', 'beta', 'ar_day', 'CAR', 't_stat', 'significant', 'event']
-    print(event_df[cols].to_string(index=False))
-    print("="*65)
-
-
-def plot_event_impact(event_df: pd.DataFrame, save=True):
-    if event_df.empty:
-        return
-
-    fig, axes = plt.subplots(2, 3, figsize=(16, 10))
-    fig.suptitle('New Space — Event Impact Analysis (Market-Model CARs)',
-                 fontsize=14, fontweight='bold')
-
-    for i, ticker in enumerate(['RKLB', 'ASTS', 'LUNR']):
-        df = event_df[event_df['ticker'] == ticker].copy()
-        if df.empty:
-            axes[0, i].set_title(f'{ticker} — no data')
-            axes[1, i].set_title(f'{ticker} — no data')
-            continue
-
-        bar_colors = [EVENT_COLORS.get(t, '#888780') for t in df['type']]
-
-        # Row 0: CAR bar chart
-        bars = axes[0, i].bar(range(len(df)), df['CAR'] * 100,
-                               color=bar_colors, alpha=0.85, edgecolor='white',
-                               linewidth=0.5)
-
-        # Hatch significant bars
-        for bar, sig in zip(bars, df['significant']):
-            if sig:
-                bar.set_edgecolor('black')
-                bar.set_linewidth(1.5)
-
-        axes[0, i].axhline(0, color='black', linestyle='--', alpha=0.4)
-        axes[0, i].axhline(df['CAR'].mean() * 100, color='red',
-                            linestyle='--', alpha=0.6,
-                            label=f"Avg: {df['CAR'].mean():.1%}")
-        axes[0, i].set_title(f'{ticker}  CAR [-2,+5]', fontweight='bold')
-        axes[0, i].set_ylabel('Cumulative Abnormal Return (%)')
-        axes[0, i].set_xlabel('Event #')
-        axes[0, i].legend(fontsize=8)
-        axes[0, i].grid(True, alpha=0.25)
-
-        # Row 1: t-stats
-        t_colors = ['#1D9E75' if v > 0 else '#A32D2D'
-                    for v in df['t_stat'].fillna(0)]
-        axes[1, i].bar(range(len(df)), df['t_stat'].fillna(0),
-                        color=t_colors, alpha=0.75, edgecolor='white')
-        axes[1, i].axhline( 1.96, color='red', linestyle='--',
-                             alpha=0.5, label='95% sig (±1.96)')
-        axes[1, i].axhline(-1.96, color='red', linestyle='--', alpha=0.5)
-        axes[1, i].axhline(0, color='black', linestyle='--', alpha=0.3)
-        axes[1, i].set_title(f'{ticker}  t-statistics', fontweight='bold')
-        axes[1, i].set_ylabel('t-stat')
-        axes[1, i].legend(fontsize=8)
-        axes[1, i].grid(True, alpha=0.25)
-
-    from matplotlib.patches import Patch
-    legend_elements = [Patch(facecolor=c, label=t.capitalize())
-                       for t, c in EVENT_COLORS.items()]
-    fig.legend(handles=legend_elements, loc='lower center',
-               ncol=3, fontsize=10, bbox_to_anchor=(0.5, -0.02))
-
-    plt.tight_layout()
+    fig, ax = plt.subplots()
+    ax.bar(valid['id'], valid['car'] * 100)
+    ax.set(title='Descriptive event CAR (exploratory)', ylabel='Sum of log abnormal returns (%)')
+    ax.tick_params(axis='x', rotation=45)
     if save:
-        Path("data").mkdir(exist_ok=True)
-        plt.savefig("data/event_impact.png", dpi=150, bbox_inches='tight')
-        print("Saved: data/event_impact.png")
-    plt.close()
-
-
-if __name__ == "__main__":
-    from src.data import fetch_price_history, compute_returns
-    prices  = fetch_price_history()
-    returns = compute_returns(prices)
-    events  = analyze_all_events(prices, returns)
-    print_event_summary(events)
-    plot_event_impact(events)
-    from scipy import stats
-
-def test_significance(event_df, ticker):
-    df = event_df[event_df['ticker'] == ticker]['abnormal_ret']
-    t_stat, p_value = stats.ttest_1samp(df.dropna(), 0)
-    print(f"{ticker}: t={t_stat:.2f}, p={p_value:.3f}")
-    if p_value < 0.05:
-        print(f"  Statistically significant at 95% confidence")
-    else:
-        print(f"  Not statistically significant (small sample)")
+        Path('data').mkdir(exist_ok=True)
+        fig.savefig('data/event_impact.png', bbox_inches='tight')
+    plt.close(fig)

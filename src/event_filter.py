@@ -1,34 +1,8 @@
-"""
-event_filter.py  —  add to new-space-radar/src/
-------------------------------------------------
-Statistical significance filter for CAR (Cumulative Abnormal Return) event studies.
+"""Legacy unadjusted threshold diagnostics, excluded from the validated pipeline.
 
-What this does:
-  Your event study already computes CARs and t-statistics for each event.
-  This module adds a filter: only keep events where the result is REAL,
-  not just noise.
-
-The rule: |t-stat| > 1.96  →  95% confidence the abnormal return is real
-           |t-stat| > 2.58  →  99% confidence (stricter)
-
-Why this matters:
-  If you have 20 events and report all of them, some will look significant by
-  pure chance (false positives). Filtering on |t| > 1.96 means you only
-  report the ones that are statistically meaningful.
-
-  This is exactly what academic papers do. If you put this on your GitHub
-  with proper t-stat filtering, it looks like proper research.
-
-Also adds:
-  - Cohen's d effect size (how BIG is the abnormal return, not just significant)
-  - Cross-event aggregation (average CAR across all events for a ticker)
-  - Publication-style summary table
-
-Run standalone:
-    python src/event_filter.py
-
-Or import into your existing event study:
-    from src.event_filter import filter_significant_events, summarise_by_ticker
+Thresholding is not a multiple-testing correction and cannot establish that a
+catalyst caused a move. Selecting large statistics biases reported effects.
+Use all provenance-aware outcomes from src.events for descriptive research.
 """
 
 import numpy as np
@@ -41,7 +15,7 @@ from pathlib import Path
 
 def filter_significant_events(events_df, t_col="t_stat", confidence=0.95):
     """
-    Filter events DataFrame to only statistically significant results.
+    Filter events DataFrame to only unadjusted threshold exceedances.
 
     events_df must have a column with t-statistics (default: 't_stat').
     confidence: 0.95 = 95% (t > 1.96), 0.99 = 99% (t > 2.58)
@@ -60,12 +34,12 @@ def filter_significant_events(events_df, t_col="t_stat", confidence=0.95):
 
     sig_rate = len(significant) / len(events_df) if len(events_df) > 0 else 0
 
-    print(f"\n── Significance Filter ({confidence*100:.0f}% confidence, |t| ≥ {threshold}) ──")
+    print(f"\n── Unadjusted Diagnostic Filter ({confidence*100:.0f}% nominal level, |t| ≥ {threshold}) ──")
     print(f"  Total events:       {len(events_df)}")
-    print(f"  Significant:        {len(significant)}  ({sig_rate:.0%})")
-    print(f"  Rejected (noise):   {len(rejected)}")
-    print(f"  Expected false pos: ~{len(events_df) * (1 - confidence):.1f} "
-          f"(events that look sig by chance)")
+    print(f"  Above threshold:    {len(significant)}  ({sig_rate:.0%})")
+    print(f"  Below threshold:   {len(rejected)}")
+    print(f"  Nominal null count: ~{len(events_df) * (1 - confidence):.1f} "
+          f"(only if null statistics are calibrated)")
 
     return significant, rejected, threshold
 
@@ -126,8 +100,8 @@ def summarise_by_ticker(events_df, ticker_col="ticker", car_col="car",
 def print_summary_table(summary_df):
     """Print a clean publication-style summary table."""
     print("\n" + "="*72)
-    print("  EVENT STUDY SUMMARY — Significant Events Only")
-    print("  (Cumulative Abnormal Returns, t-filtered at 95% confidence)")
+    print("  EVENT STUDY SUMMARY — Threshold-selected Events (selection biased)")
+    print("  (Cumulative Abnormal Returns, threshold-selected; no multiplicity correction)")
     print("="*72)
     print(f"  {'Ticker':8}  {'N':>4}  {'Mean CAR':>10}  {'Cohen d':>9}  "
           f"{'% Positive':>11}  {'Mean |t|':>9}")
@@ -148,7 +122,7 @@ def print_summary_table(summary_df):
 
     print(f"  {'─'*66}")
     print(f"\n  Cohen's d: < 0.2 negligible | 0.2–0.5 small | 0.5–0.8 medium | > 0.8 large")
-    print(f"  This tells you HOW BIG the effect is, not just whether it's real.")
+    print(f"  This tells you HOW BIG the effect is, without establishing causation or a trading edge.")
     print("="*72)
 
 
@@ -156,7 +130,7 @@ def plot_car_significance(events_df, car_col="car", t_col="t_stat",
                            ticker_col="ticker", threshold=1.96):
     """
     Scatter plot: t-stat vs CAR for all events.
-    Green = significant, grey = noise.
+    Green = above threshold, grey = below; neither establishes causation.
     """
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     fig.suptitle("CAR Event Study — Significance Analysis", fontsize=13, fontweight="bold")
@@ -169,10 +143,10 @@ def plot_car_significance(events_df, car_col="car", t_col="t_stat",
     ax = axes[0]
     if len(noise) > 0:
         ax.scatter(noise[t_col], noise[car_col] * 100, color="grey", alpha=0.5,
-                   s=40, label=f"Not significant (n={len(noise)})")
+                   s=40, label=f"Below threshold (n={len(noise)})")
     if len(sig) > 0:
         ax.scatter(sig[t_col], sig[car_col] * 100, color="#1D9E75", alpha=0.8,
-                   s=60, label=f"Significant (n={len(sig)})", zorder=5)
+                   s=60, label=f"Above threshold (n={len(sig)})", zorder=5)
         if ticker_col in events_df.columns:
             for _, row in sig.iterrows():
                 ax.annotate(row[ticker_col], (row[t_col], row[car_col]*100),
@@ -192,10 +166,10 @@ def plot_car_significance(events_df, car_col="car", t_col="t_stat",
     ax2 = axes[1]
     if len(noise) > 0:
         ax2.hist(noise[car_col] * 100, bins=15, alpha=0.5, color="grey",
-                 label=f"Noise (n={len(noise)})", density=True)
+                 label=f"Below threshold (n={len(noise)})", density=True)
     if len(sig) > 0:
         ax2.hist(sig[car_col] * 100, bins=15, alpha=0.7, color="#1D9E75",
-                 label=f"Significant (n={len(sig)})", density=True)
+                 label=f"Above threshold (n={len(sig)})", density=True)
     ax2.axvline(0, color="black", linewidth=0.8)
     ax2.set_xlabel("CAR (%)")
     ax2.set_ylabel("Density")
@@ -246,7 +220,7 @@ def demo_with_synthetic_events():
         print_summary_table(summary)
         plot_car_significance(df, threshold=threshold)
     else:
-        print("  No significant events in demo data — try lowering confidence to 0.90")
+        print("  No threshold exceedances in synthetic data; do not tune thresholds to obtain positives")
 
     return df, sig
 

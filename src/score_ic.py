@@ -8,7 +8,7 @@ THE IDEA
 IC = the correlation between what you PREDICTED and what ACTUALLY happened.
 It only counts if you write the prediction down BEFORE the move (no hindsight).
 This is THE skill metric in quant (Grinold & Kahn). A small positive IC that is
-stable and statistically significant is a real, hireable edge.
+stable in a preregistered evaluation can motivate further research; it is not proof of edge.
 
 We score predictions against the MARKET (default benchmark SPY), not raw direction —
 because a high-beta stock going up when everything goes up is beta, not skill.
@@ -158,7 +158,7 @@ def report_ic(benchmark: str = BENCHMARK) -> None:
         elif abs(s["t_stat"]) < 2:
             print("  Read: IC not yet distinguishable from luck. Keep going.")
         else:
-            print("  Read: statistically significant IC — a real, reportable edge.")
+            print("  Read: nominal IC threshold exceeded; exploratory, not proof of a trading edge.")
     print("=" * 56)
     print(f"  Scored rows saved -> {SCORED_CSV}")
 

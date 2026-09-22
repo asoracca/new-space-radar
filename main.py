@@ -4,8 +4,9 @@ main.py
 Full new-space-radar pipeline. Run this to generate all outputs.
 
 Usage:
-    python main.py              # full pipeline
-    python main.py --signal     # today's signal only (fast)
+    python main.py              # offline evidence demo
+    python main.py --live        # provider-dependent full pipeline
+    python main.py --signal      # provider-dependent signal scan
 """
 
 import warnings
@@ -83,5 +84,16 @@ def main(signal_only: bool = False):
 
 
 if __name__ == "__main__":
-    signal_only = "--signal" in sys.argv
-    main(signal_only=signal_only)
+    import argparse
+    parser = argparse.ArgumentParser(description='Offline evidence by default; provider access is explicit.')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--live', action='store_true', help='Run the provider-dependent research pipeline')
+    mode.add_argument('--signal', action='store_true', help='Fetch current provider data for a signal scan')
+    args = parser.parse_args()
+    if args.live or args.signal:
+        main(signal_only=args.signal)
+    else:
+        from src.export import export
+        result = export(Path('evidence'), Path('data/evidence.sqlite'))
+        print(result['counts'])
+        print('Saved evidence/results.json; serve the repository root and open /explorer/.')
